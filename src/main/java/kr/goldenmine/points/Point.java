@@ -4,6 +4,10 @@ public class Point {
     public double x;
     public double y;
 
+    public Point(int x, int y) {
+        this((double)x, (double)y);
+    }
+
     public Point(double x, double y) {
         this.x = x;
         this.y = y;
@@ -23,7 +27,6 @@ public class Point {
         double d = degree(pitch);
 
         double x1 = b * Math.cos(d) - a * Math.sin(d);
-
         double y1 = b * Math.sin(d) + a * Math.cos(d);
 
         return new Point(x1, y1);

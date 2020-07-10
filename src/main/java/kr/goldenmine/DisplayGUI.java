@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import javafx.util.Pair;
 import javax.swing.*;
-import kr.goldenmine.Models.Figure;
+import kr.goldenmine.models.Figure;
 import kr.goldenmine.points.Point;
 import kr.goldenmine.points.Point3D;
 
@@ -20,11 +20,11 @@ public class DisplayGUI extends JFrame {
     private double xAngle = 0;
     private double yAngle = 0;
 
-    // 보는 시점의 위치
-    private double eye;
+    // 점/면/육면체 등
+    private PointStorage storage = new PointStorage();
 
-    // 점 또는 면들
-    private List<Pair<Figure, Boolean>> figures = new ArrayList<>();
+    // 보는 시점의 거리
+    private double eye;
 
     // 1칸을 실제 컴퓨터의 몇 픽셀로 할것인가
     private int onePixelSize;
@@ -41,15 +41,15 @@ public class DisplayGUI extends JFrame {
 
     private int currentEditing = -1;
 
-    // 벡터 추가할때 Dialog
-    // 람다를 배우셨는지는 모르겠지만,,, 함수를 매개변수를 이용해 넘겨버릴수 있다.
-    // 즉 아래에 쓴 내용 자체를 VectorAddDialog 클래스에서 실행시키도록 만들어버릴 수 있음
+    // 벡터 추가할 때 Dialog
     private VectorAddDialog vectorAddDialog = new VectorAddDialog((point, color) -> {
         addLine(new Point3D(0, 0, 0), point, color, true);
         repaint();
     });
+
+    // 벡터 수정할 때 Dialog
     private VectorAddDialog vectorEditDialog = new VectorAddDialog((point, color) -> {
-        Figure figure = figures.get(currentEditing).getKey();
+        Figure figure = storage.getFigures().get(currentEditing).getKey();
         List<Point3D> points = figure.getCoordinates();
         points.set(1, point);
         figure.setColor(color);
@@ -62,6 +62,7 @@ public class DisplayGUI extends JFrame {
     private List<Point3D> points = new ArrayList<>();
     private JButton innerProduct = new JButton("dot product");
     private JButton outerProduct = new JButton("cross product");
+    private JButton throwProjectile = new JButton("throw a projectile");
 
     // 3D를 그려내기 위해 추가로 만든 패널
     // 안만들고 직접 JFrame에 그려버릴 수도 있는데 그러면 위에 메뉴창이 안만들어진다.
@@ -83,7 +84,8 @@ public class DisplayGUI extends JFrame {
     };
 
     // 벡터 관리용으로 쓸 전용패널
-    private GoldenList vectorVIewerPanelList = new GoldenList();
+    private GoldenList vectorViewerPanelList = new GoldenList();
+    private GoldenList rectangleList = new GoldenList();
 
     private DisplayGUI instance = this;
 
@@ -97,7 +99,7 @@ public class DisplayGUI extends JFrame {
 
     // 선 추가
     public void addLine(Point3D p1, Point3D p2, Color color, boolean administrator) {
-        figures.add(new Pair<>(new Figure(Arrays.asList(p1, p2), lineDefaultPairs, color), administrator));
+        storage.getFigures().add(new Pair<>(new Figure(Arrays.asList(p1, p2), lineDefaultPairs, color), administrator));
         if (administrator) {
             updateVectorViewerPanels();
         }
@@ -106,8 +108,8 @@ public class DisplayGUI extends JFrame {
     public void initializePoints() {
         points.clear();
 
-        for (int i = 0; i < vectorVIewerPanelList.listSize(); i++) {
-            ((VectorViewerPanel) vectorVIewerPanelList.getElement(i)).clearCheckBox();
+        for (int i = 0; i < vectorViewerPanelList.listSize(); i++) {
+            ((ViewerPanel) vectorViewerPanelList.getElement(i)).clearCheckBox();
         }
     }
 
@@ -126,14 +128,14 @@ public class DisplayGUI extends JFrame {
         this.onePixelSize = onePixelSize;
 
         // 사이즈 설정
-        // 800,600으로 그냥 고정시켰다. + 200은 벡터 관리 전용
-        setSize(1000, 600);
+        // 800,600으로 고정시켰다. + 200은 벡터 관리 전용 + 200은 도형 관리 전용
+        setSize(1200, 600);
         buffer = new BufferedImage(800, 600, BufferedImage.TYPE_INT_ARGB);
         setResizable(false);
 
         drawPanel.setPreferredSize(new Dimension(800, 600));
-        vectorVIewerPanelList.setPreferredSize(new Dimension(200, 600));
-        vectorVIewerPanelList.getScrollPane().setPreferredSize(new Dimension(200, 600));
+        vectorViewerPanelList.setPreferredSize(new Dimension(200, 600));
+        vectorViewerPanelList.getScrollPane().setPreferredSize(new Dimension(200, 600));
 
         JPanel east_south = new JPanel();
         east_south.setLayout(new FlowLayout());
@@ -142,7 +144,7 @@ public class DisplayGUI extends JFrame {
 
         JPanel east = new JPanel();
         east.setLayout(new BorderLayout());
-        east.add(vectorVIewerPanelList);
+        east.add(vectorViewerPanelList);
         east.add(east_south, "South");
 
 
@@ -180,6 +182,7 @@ public class DisplayGUI extends JFrame {
         // (North, South, East, West) 나머지 쪼갠 것에 아무것도 넣지 않으면 Center가 그 자리를 먹어버린다.
         add(drawPanel, "Center");
         add(east, "East");
+        add(throwProjectile, "South");
 
         addDefaultLines();
         registerEvents();
@@ -191,14 +194,14 @@ public class DisplayGUI extends JFrame {
         int index = 0;
         int loopIndex = 0;
 
-        for (Pair<Figure, Boolean> figureInfo : figures) {
+        for (Pair<Figure, Boolean> figureInfo : storage.getFigures()) {
             Figure figure = figureInfo.getKey();
             boolean administrator = figureInfo.getValue();
 
             if (administrator) {
-                VectorViewerPanel panel;
-                if (index >= vectorVIewerPanelList.listSize()) {
-                    panel = new VectorViewerPanel();
+                ViewerPanel panel;
+                if (index >= vectorViewerPanelList.listSize()) {
+                    panel = new ViewerPanel();
                     panel.setEvent(() -> {
                         currentEditing = panel.getIndex();
                         vectorEditDialog.setVector(figure.getCoordinates().get(1), figure.getColor());
@@ -212,9 +215,9 @@ public class DisplayGUI extends JFrame {
                             points.remove(figure.getCoordinates().get(1));
                         }
                     });
-                    vectorVIewerPanelList.addElement(panel);
+                    vectorViewerPanelList.addElement(panel);
                 } else {
-                    panel = (VectorViewerPanel) vectorVIewerPanelList.getElement(index);
+                    panel = (ViewerPanel) vectorViewerPanelList.getElement(index);
                 }
 
                 panel.setVector(loopIndex, figure.getCoordinates().get(1));
@@ -305,7 +308,7 @@ public class DisplayGUI extends JFrame {
 
                 // 현재 존재하는 모든 점들을 루프 돌려본다
                 Loop:
-                for (Pair<Figure, Boolean> figureInfo : figures) {
+                for (Pair<Figure, Boolean> figureInfo : storage.getFigures()) {
                     Figure figure = figureInfo.getKey();
                     if (figureInfo.getValue()) {
                         for (Point3D point3D : figure.getCoordinates()) {
@@ -359,7 +362,7 @@ public class DisplayGUI extends JFrame {
         g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
 
         // 선들을 그려낸다
-        for (Pair<Figure, Boolean> figureInfo : figures) {
+        for (Pair<Figure, Boolean> figureInfo : storage.getFigures()) {
             // 색깔을 설정하고
             Figure figure = figureInfo.getKey();
             g.setColor(figure.getColor());
@@ -374,7 +377,7 @@ public class DisplayGUI extends JFrame {
                 // 왜 이렇게하면 회전이 되는지는 구글에 많이 나와있다.
                 Point3D point3D = position.getRotatePoint(xAngle, yAngle);
 
-                // get2DPoint: 원하시면 따로 설명 해드립니다 좀 상당히 복잡한 내용ㅇ,,,,,
+                // get2DPoint: 3D좌표를 2D 모니터 화면에 투영
                 // toPosition: 쓴 좌표를 모니터의 픽셀 위치에 맞게 배치시켜준다.
                 // (실제 Point에는 (1,1) 이런 좌표가 들어있는데 이걸 모니터에 표현해야 하니까. 모니터의 (1,1) 좌표에 아무런 보정도 없이 그려버리면 눈뜨고 보기 쉽지 않을꺼다)
                 Point point = point3D.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2, buffer.getHeight() / 2, onePixelSize);

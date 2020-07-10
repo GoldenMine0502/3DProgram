@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import javax.swing.*;
 import kr.goldenmine.points.Point3D;
 
-public class VectorViewerPanel extends JPanel {
+public class ViewerPanel extends JPanel {
     private JLabel vector = new JLabel();
     private JButton editButton = new JButton("Edit");
     private JCheckBox checkBox = new JCheckBox("");
@@ -15,7 +15,7 @@ public class VectorViewerPanel extends JPanel {
     private Lambda editButtonEvent;
     private Lambda checkBoxEvent;
 
-    public VectorViewerPanel() {
+    public ViewerPanel() {
         setPreferredSize(new Dimension(200, 60));
         setLayout(new BorderLayout());
 

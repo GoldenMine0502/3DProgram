@@ -1,4 +1,4 @@
-package kr.goldenmine.Models;
+package kr.goldenmine.models;
 
 import kr.goldenmine.points.Point;
 import kr.goldenmine.points.Point3D;
@@ -8,13 +8,13 @@ import java.util.List;
 
 public class Figure {
 	// 좌표들
-	List<Point3D> points;
+	private List<Point3D> points;
 
 	// 어떤 좌표를 연결시킬 건가
-	List<Point> connects = new ArrayList<>();
+	private List<Point> connects = new ArrayList<>();
 
 	// 색깔은 어떻게 할건가
-	Color color = Color.BLACK;
+	private Color color = Color.BLACK;
 	
 	public Figure(List<Point3D> points) {
 		this.points = points;

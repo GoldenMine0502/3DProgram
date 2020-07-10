@@ -18,7 +18,6 @@ public class VectorAddDialog extends JDialog {
     // 자바에서 기본 지원하는 컬러 선택 유틸이다.
     private JColorChooser colorChooser = new JColorChooser(Color.BLACK);
 
-
     private JTextField xPosField = new JTextField();
     private JTextField yPosField = new JTextField();
     private JTextField zPosField = new JTextField();
@@ -57,18 +56,16 @@ public class VectorAddDialog extends JDialog {
 
         // ok 버튼을 눌렀을 때 다음과 같은 실행을 한다
         okButton.addActionListener(e-> {
-            // 이것이 람다.
-            // accept()를 딱 하면 DisplayGUI에서 매개변수로 넣었던 그 함수를 실행시킬 수 있다.
+            // 콜백.
             // colorChooser.getColor()를 하면 컬러 선택창에서 설정한 색깔을 얻어올 수 있다.
             // TextField에서 값을 입력하고 불러온 값들은 기본적으로 String이기 때문에 Double이나 Integer로 바꿔줘야 숫자로서의 기능을 할 수 있게 된다.
-            // (문자열 "1"과 숫자 1은 엄연히 다르다)
             ok.accept(new Point3D(Double.parseDouble(xPosField.getText()), Double.parseDouble(yPosField.getText()), Double.parseDouble(zPosField.getText())), colorChooser.getColor());
 
             //창을 숨긴다
             cancel();
         });
 
-        // cancel 버튼을 눌렀을 때 다음과 같은 실행을 한다
+        // cancel 버튼을 눌렀을 때
         cancelButton.addActionListener(e -> cancel());
 
         // X버튼 또는 Alt + F4를 눌렀을때 창을 숨긴다
