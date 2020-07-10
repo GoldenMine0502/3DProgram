@@ -1,4 +1,6 @@
-package kr.theterroronline.util.physics
+package kr.goldenmine.collision
+
+import kr.theterroronline.util.physics.Vector3d
 
 enum class Face(val skip : Vector3d, val add : Vector3d) {
     Y(Vector3d(0, 0, 0), Vector3d(0, -1, 0)),

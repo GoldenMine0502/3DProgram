@@ -1,14 +1,15 @@
 package kr.goldenmine.models;
 
 import kr.goldenmine.points.Point;
-import kr.goldenmine.points.Point3D;
+import kr.theterroronline.util.physics.Vector3d;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Figure {
 	// 좌표들
-	private List<Point3D> points;
+	private List<Vector3d> coordinates;
 
 	// 어떤 좌표를 연결시킬 건가
 	private List<Point> connects = new ArrayList<>();
@@ -16,22 +17,22 @@ public class Figure {
 	// 색깔은 어떻게 할건가
 	private Color color = Color.BLACK;
 	
-	public Figure(List<Point3D> points) {
-		this.points = points;
+	protected Figure(List<Vector3d> coordinates) {
+		this.coordinates = coordinates;
 	}
-	
-	public Figure(List<Point3D> points, List<Point> connects) {
-		this(points);
+
+	protected Figure(List<Vector3d> coordinates, List<Point> connects) {
+		this(coordinates);
 		this.connects = connects;
 	}
-	
-	public Figure(List<Point3D> points, List<Point> connects, Color color) {
-		this(points, connects);
+
+	protected Figure(List<Vector3d> coordinates, List<Point> connects, Color color) {
+		this(coordinates, connects);
 		this.color = color;
 	}
 
-	public List<Point3D> getCoordinates() {
-		return points;
+	public List<Vector3d> getCoordinates() {
+		return coordinates;
 	}
 	
 	public List<Point> getConnects() {

@@ -5,12 +5,15 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javafx.util.Pair;
 import javax.swing.*;
 import kr.goldenmine.models.Figure;
+import kr.goldenmine.models.Line;
+import kr.goldenmine.models.SkyRectangle;
 import kr.goldenmine.points.Point;
-import kr.goldenmine.points.Point3D;
+import kr.theterroronline.util.physics.Vector3d;
 
 public class DisplayGUI extends JFrame {
     // 버퍼
@@ -43,14 +46,14 @@ public class DisplayGUI extends JFrame {
 
     // 벡터 추가할 때 Dialog
     private VectorAddDialog vectorAddDialog = new VectorAddDialog((point, color) -> {
-        addLine(new Point3D(0, 0, 0), point, color, true);
+        addLine(new Vector3d(0, 0, 0, false), point, color, true);
         repaint();
     });
 
     // 벡터 수정할 때 Dialog
     private VectorAddDialog vectorEditDialog = new VectorAddDialog((point, color) -> {
         Figure figure = storage.getFigures().get(currentEditing).getKey();
-        List<Point3D> points = figure.getCoordinates();
+        List<Vector3d> points = figure.getCoordinates();
         points.set(1, point);
         figure.setColor(color);
 
@@ -59,7 +62,7 @@ public class DisplayGUI extends JFrame {
     });
 
     // 선택한 포인트 리스트
-    private List<Point3D> points = new ArrayList<>();
+    private List<Vector3d> points = new ArrayList<>();
     private JButton innerProduct = new JButton("dot product");
     private JButton outerProduct = new JButton("cross product");
     private JButton throwProjectile = new JButton("throw a projectile");
@@ -72,8 +75,6 @@ public class DisplayGUI extends JFrame {
     // 어쩔수 없이 하위 패널을 만드는 것이다
     // JFrame안에는 패널을 넣을 수 있고 패널 안에 또 패널을 또 넣을수도 있고 패널안에 패널 여러개를 집어넣을수도 있다
     private JPanel drawPanel = new JPanel() {
-        // 메소드를 오버라이딩 했다
-        // repaint(), paint() 등에 대해 자세한 내용은 https://blog.naver.com/jydev/220735105178
         @Override
         public void paint(Graphics g) {
             // 버퍼에다가 쓴 뒤 draw 하는 이유는 업데이트 할때마다 생기는 깜빡이를 방지하기 위함
@@ -95,14 +96,19 @@ public class DisplayGUI extends JFrame {
 
     // 0, 1로 쓰게 되면 0번 인덱스와 1번 인덱스에 등록한 점끼리 선으로 연결해주게 된다.
     // 아래 코드에서 상술
-    List<Point> lineDefaultPairs = Arrays.asList(new Point(0, 1));
+    private List<Point> lineDefaultPairs = Collections.singletonList(new Point(0, 1));
 
     // 선 추가
-    public void addLine(Point3D p1, Point3D p2, Color color, boolean administrator) {
-        storage.getFigures().add(new Pair<>(new Figure(Arrays.asList(p1, p2), lineDefaultPairs, color), administrator));
+    public void addLine(Vector3d p1, Vector3d p2, Color color, boolean administrator) {
+        storage.add(new Line(p1, p2, color), administrator);
         if (administrator) {
             updateVectorViewerPanels();
         }
+    }
+
+    public void addRectangle(Vector3d pos, Vector3d start, Vector3d finish, Color color) {
+        Vector3d difference = finish.subtract(start);
+        storage.add(new SkyRectangle(pos, new Vector3d(0, 0, 0, true), 0.1, start.getX(), start.getY(), start.getZ(), difference.getX(), difference.getY(), difference.getZ(), color), false);
     }
 
     public void initializePoints() {
@@ -128,8 +134,8 @@ public class DisplayGUI extends JFrame {
         this.onePixelSize = onePixelSize;
 
         // 사이즈 설정
-        // 800,600으로 고정시켰다. + 200은 벡터 관리 전용 + 200은 도형 관리 전용
-        setSize(1200, 600);
+        // 800,600으로 고정시켰다. + 200은 벡터 관리 전용
+        setSize(1000, 620);
         buffer = new BufferedImage(800, 600, BufferedImage.TYPE_INT_ARGB);
         setResizable(false);
 
@@ -150,15 +156,13 @@ public class DisplayGUI extends JFrame {
 
         innerProduct.addActionListener((e) -> {
             if (points.size() >= 2) {
-                Point3D result = new Point3D(1, 1, 1);
+                Vector3d result = new Vector3d(1, 1, 1);
                 for (int i = 0; i < points.size(); i++) {
-                    Point3D p3d = points.get(i);
-                    result.x *= p3d.x;
-                    result.y *= p3d.y;
-                    result.z *= p3d.z;
+                    Vector3d p3d = points.get(i);
+                    result.multiply(p3d);
                 }
 
-                double sum = result.x + result.y + result.z;
+                double sum = result.getX() + result.getY() + result.getZ();
                 JOptionPane.showMessageDialog(instance, "counts: " + points.size() + ", result: " + sum);
 
                 initializePoints();
@@ -167,14 +171,18 @@ public class DisplayGUI extends JFrame {
 
         outerProduct.addActionListener(e -> {
             if (points.size() >= 2) {
-                Point3D p3d = points.get(0);
-                Point3D p3d2 = points.get(1);
+                Vector3d p3d = points.get(0);
+                Vector3d p3d2 = points.get(1);
 
                 vectorAddDialog.setVector(p3d.out3D(p3d2), Color.GREEN);
                 vectorAddDialog.setVisible(true);
 
                 initializePoints();
             }
+        });
+
+        throwProjectile.addActionListener(e -> {
+
         });
 
         // drawPanel을 가운데에 추가해준다
@@ -196,6 +204,7 @@ public class DisplayGUI extends JFrame {
 
         for (Pair<Figure, Boolean> figureInfo : storage.getFigures()) {
             Figure figure = figureInfo.getKey();
+            Vector3d point = figure.getCoordinates().get(1);
             boolean administrator = figureInfo.getValue();
 
             if (administrator) {
@@ -220,7 +229,8 @@ public class DisplayGUI extends JFrame {
                     panel = (ViewerPanel) vectorViewerPanelList.getElement(index);
                 }
 
-                panel.setVector(loopIndex, figure.getCoordinates().get(1));
+
+                panel.setTitle(loopIndex, "(" + point.getX() + ", " + point.getY() + ", " + point.getZ() + ")");
                 panel.invalidate();
 
                 index++;
@@ -238,13 +248,17 @@ public class DisplayGUI extends JFrame {
         // Alt + V 키보드 누르면 똑같은 효과가 남
         menuItemAdd.setAccelerator(KeyStroke.getKeyStroke(
                 KeyEvent.VK_V, InputEvent.ALT_MASK));
+        JMenuItem menuItemAddRectangle = new JMenuItem("add new rectangle..");
+        // Alt + V 키보드 누르면 똑같은 효과가 남
+        menuItemAddRectangle.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_R, InputEvent.ALT_MASK));
         menuAdd.add(menuItemAdd);
 
         menuBar.add(menuAdd);
 
         // 버튼을 클릭했을때 벡터 추가 화면을 열어준다
         menuItemAdd.addActionListener(e -> vectorAddDialog.setVisible(true));
-
+        menuItemAddRectangle.addActionListener(e -> {});
         // 메뉴바 설정
         setJMenuBar(menuBar);
     }
@@ -311,10 +325,10 @@ public class DisplayGUI extends JFrame {
                 for (Pair<Figure, Boolean> figureInfo : storage.getFigures()) {
                     Figure figure = figureInfo.getKey();
                     if (figureInfo.getValue()) {
-                        for (Point3D point3D : figure.getCoordinates()) {
+                        for (Vector3d point3D : figure.getCoordinates()) {
                             //각 점의 실제 위치를 구한다
-                            Point point = point3D.getRotatePoint(xAngle, yAngle).get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2, buffer.getHeight() / 2, onePixelSize);
-                            //System.out.println(point + " // " + e.getX() + ", " + e.getY());
+                            Point point = point3D.getRotatePoint(xAngle, yAngle).get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2.0, buffer.getHeight() / 2.0, onePixelSize);
+
                             // 실제 점의 좌표와 클릭한 마우스간 차이가 10픽셀 이내라면 해당 벡터를 수정할 수 있게 해준다
                             if (Math.abs(Math.abs(point.x - e.getX()) - adaptX) <= 10 && Math.abs(Math.abs(point.y - e.getY()) - adaptY) <= 10) {
                                 currentEditing = index;
@@ -346,16 +360,18 @@ public class DisplayGUI extends JFrame {
     // 기본이 될 베이스 선들을 추가해준다
     public void addDefaultLines() {
         for (int x = -10; x <= 10; x++) {
-            addLine(new Point3D(x, -10, 0), new Point3D(x, 10, 0), Color.LIGHT_GRAY, false);
+            addLine(new Vector3d(x, -10, 0), new Vector3d(x, 10, 0), Color.LIGHT_GRAY, false);
         }
         for (int y = -10; y <= 10; y++) {
-            addLine(new Point3D(-10, y, 0), new Point3D(10, y, 0), Color.LIGHT_GRAY, false);
+            addLine(new Vector3d(-10, y, 0), new Vector3d(10, y, 0), Color.LIGHT_GRAY, false);
         }
-        addLine(new Point3D(0, 0, -10), new Point3D(0, 0, 10), Color.LIGHT_GRAY, false);
+        addLine(new Vector3d(0, 0, -10), new Vector3d(0, 0, 10), Color.LIGHT_GRAY, false);
     }
 
     public void drawInBuffer() {
         Graphics2D g = (Graphics2D) buffer.getGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         // 버퍼에다 싸질러녾은 잡잡한거 초기화
         g.setColor(Color.WHITE);
@@ -368,19 +384,19 @@ public class DisplayGUI extends JFrame {
             g.setColor(figure.getColor());
 
             // 그려낼 점들의 위치를 받아온다.
-            List<Point3D> figures = figure.getCoordinates();
+            List<Vector3d> figures = figure.getCoordinates();
 
             for (int i = 0; i < figures.size(); i++) {
-                Point3D position = figures.get(i);
+                Vector3d position = figures.get(i);
 
                 // 현재 각도에 맞게 회전을 시켜준다. (3D 회전을 시킬때 x축을 회전하고 y축을 따로 회전시켜도 된다)
                 // 왜 이렇게하면 회전이 되는지는 구글에 많이 나와있다.
-                Point3D point3D = position.getRotatePoint(xAngle, yAngle);
+                Vector3d point3D = position.getRotatePoint(xAngle, yAngle);
 
                 // get2DPoint: 3D좌표를 2D 모니터 화면에 투영
                 // toPosition: 쓴 좌표를 모니터의 픽셀 위치에 맞게 배치시켜준다.
                 // (실제 Point에는 (1,1) 이런 좌표가 들어있는데 이걸 모니터에 표현해야 하니까. 모니터의 (1,1) 좌표에 아무런 보정도 없이 그려버리면 눈뜨고 보기 쉽지 않을꺼다)
-                Point point = point3D.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2, buffer.getHeight() / 2, onePixelSize);
+                Point point = point3D.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2.0, buffer.getHeight() / 2.0, onePixelSize);
 
                 // 점에는 따로 사각형 모양을 해준다. 없애면 그냥 선만 남는다.
                 g.fillRect((int) point.x - 3, (int) point.y - 3, 6, 6);
@@ -392,20 +408,20 @@ public class DisplayGUI extends JFrame {
                 Point point = connect.get(i);
 
                 //연결할 두개의 점을 가져온다.
-                Point3D pp1 = figures.get((int) point.x).getRotatePoint(xAngle, yAngle);
-                Point3D pp2 = figures.get((int) point.y).getRotatePoint(xAngle, yAngle);
+                Vector3d pp1 = figures.get((int) point.x).getRotatePoint(xAngle, yAngle);
+                Vector3d pp2 = figures.get((int) point.y).getRotatePoint(xAngle, yAngle);
 
-                if (Math.abs(pp1.z) > eye) {
-                    eye = Math.abs(pp1.z) * 3;
+                if (Math.abs(pp1.getZ()) > eye) {
+                    eye = Math.abs(pp1.getZ()) * 3;
                 }
 
-                if (Math.abs(pp2.z) > eye) {
-                    eye = Math.abs(pp2.z) * 3;
+                if (Math.abs(pp2.getZ()) > eye) {
+                    eye = Math.abs(pp2.getZ()) * 3;
                 }
 
                 // 위와 똑같이 모니터 픽셀에 맞게 좌표를 모니터 픽셀 위치로 변경
-                Point p = pp1.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2, buffer.getHeight() / 2, onePixelSize);
-                Point p2 = pp2.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2, buffer.getHeight() / 2, onePixelSize);
+                Point p = pp1.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2.0, buffer.getHeight() / 2.0, onePixelSize);
+                Point p2 = pp2.get2DPoint(eye, mul).toPosition(buffer.getWidth() / 2.0, buffer.getHeight() / 2.0, onePixelSize);
 
                 // 선을 그려준다.
                 g.drawLine((int) p.x, (int) p.y, (int) p2.x, (int) p2.y);

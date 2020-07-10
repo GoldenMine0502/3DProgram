@@ -1,7 +1,7 @@
 package kr.goldenmine.models
 
 import kr.goldenmine.points.Point
-import kr.goldenmine.points.Point3D
+import kr.theterroronline.util.physics.Vector3d
 import java.awt.Color
 import java.util.*
 
@@ -29,16 +29,16 @@ fun getRectangle(
     xs: Double,
     ys: Double,
     zs: Double
-): List<Point3D>? {
-    val list: MutableList<Point3D> =
+): List<Vector3d>? {
+    val list: MutableList<Vector3d> =
         ArrayList()
-    list.add(Point3D(x, y, z))
-    list.add(Point3D(x + xs, y, z))
-    list.add(Point3D(x + xs, y + ys, z))
-    list.add(Point3D(x, y + ys, z))
-    list.add(Point3D(x, y, z + zs))
-    list.add(Point3D(x + xs, y, z + zs))
-    list.add(Point3D(x + xs, y + ys, z + zs))
-    list.add(Point3D(x, y + ys, z + zs))
+    list.add(Vector3d(x, y, z))
+    list.add(Vector3d(x + xs, y, z))
+    list.add(Vector3d(x + xs, y + ys, z))
+    list.add(Vector3d(x, y + ys, z))
+    list.add(Vector3d(x, y, z + zs))
+    list.add(Vector3d(x + xs, y, z + zs))
+    list.add(Vector3d(x + xs, y + ys, z + zs))
+    list.add(Vector3d(x, y + ys, z + zs))
     return list
 }

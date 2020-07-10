@@ -1,12 +1,12 @@
 package kr.goldenmine;
 
+import kr.theterroronline.util.physics.Vector3d;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import javax.swing.*;
-import kr.goldenmine.points.Point3D;
 
 public class VectorAddDialog extends JDialog {
     private JButton okButton = new JButton("OK");
@@ -22,7 +22,7 @@ public class VectorAddDialog extends JDialog {
     private JTextField yPosField = new JTextField();
     private JTextField zPosField = new JTextField();
 
-    public VectorAddDialog(BiConsumer<Point3D, Color> ok) {
+    public VectorAddDialog(BiConsumer<Vector3d, Color> ok) {
         // 맨위를 Border로 만들어서 5조각으로 화면을 나누고
         setLayout(new BorderLayout());
 
@@ -59,7 +59,7 @@ public class VectorAddDialog extends JDialog {
             // 콜백.
             // colorChooser.getColor()를 하면 컬러 선택창에서 설정한 색깔을 얻어올 수 있다.
             // TextField에서 값을 입력하고 불러온 값들은 기본적으로 String이기 때문에 Double이나 Integer로 바꿔줘야 숫자로서의 기능을 할 수 있게 된다.
-            ok.accept(new Point3D(Double.parseDouble(xPosField.getText()), Double.parseDouble(yPosField.getText()), Double.parseDouble(zPosField.getText())), colorChooser.getColor());
+            ok.accept(new Vector3d(Double.parseDouble(xPosField.getText()), Double.parseDouble(yPosField.getText()), Double.parseDouble(zPosField.getText())), colorChooser.getColor());
 
             //창을 숨긴다
             cancel();
@@ -86,10 +86,10 @@ public class VectorAddDialog extends JDialog {
         setPreferredSize(new Dimension(500, 400));
     }
 
-    public void setVector(Point3D point, Color color) {
-        xPosField.setText(String.valueOf(point.x));
-        yPosField.setText(String.valueOf(point.y));
-        zPosField.setText(String.valueOf(point.z));
+    public void setVector(Vector3d point, Color color) {
+        xPosField.setText(String.valueOf(point.getX()));
+        yPosField.setText(String.valueOf(point.getY()));
+        zPosField.setText(String.valueOf(point.getZ()));
         colorChooser.setColor(color);
     }
 

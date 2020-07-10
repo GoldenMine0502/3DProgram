@@ -3,10 +3,9 @@ package kr.goldenmine;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import javax.swing.*;
-import kr.goldenmine.points.Point3D;
 
 public class ViewerPanel extends JPanel {
-    private JLabel vector = new JLabel();
+    private JLabel title = new JLabel();
     private JButton editButton = new JButton("Edit");
     private JCheckBox checkBox = new JCheckBox("");
 
@@ -27,7 +26,7 @@ public class ViewerPanel extends JPanel {
         JPanel east = new JPanel();
         east.add(editButton, "West");
         east.add(checkBox, "East");
-        add(vector, "Center");
+        add(title, "Center");
         add(east, "East");
 
         editButton.addActionListener(e-> editButtonEvent.accept());
@@ -44,9 +43,10 @@ public class ViewerPanel extends JPanel {
         this.checkBoxEvent = lambda;
     }
 
-    public void setVector(int index, Point3D point) {
+    public void setTitle(int index, String text) {
         this.index = index;
-        vector.setText("(" + point.x + ", " + point.y + ", " + point.z + ")");
+        title.setText(text);
+        //        vector.setText("(" + point.getX() + ", " + point.getY() + ", " + point.getZ() + ")");
     }
 
     public int getIndex() {

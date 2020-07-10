@@ -6,5 +6,9 @@ import java.util.*
 
 class PointStorage {
     // 점 또는 면들
-    val figures: List<Pair<Figure, Boolean>> = ArrayList()
+    val figures = ArrayList<Pair<Figure, Boolean>>()
+
+    fun add(figure: Figure, editable: Boolean) {
+        figures.add(Pair(figure, editable))
+    }
 }

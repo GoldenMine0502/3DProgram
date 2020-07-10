@@ -1,7 +1,7 @@
 package kr.theterroronline.util.physics
 
+import kr.goldenmine.collision.Face
 import kr.goldenmine.points.Point
-import kr.goldenmine.points.Point3D
 //import org.bukkit.Location
 //import org.bukkit.World
 //import org.bukkit.util.Vector
@@ -19,29 +19,24 @@ val zVecN = Vector3d(0.0, 0.0, -1.0)
 
 val faceArr = Face.values()
 
-
-
 fun floor(num: Double): Int {
     val floor = num.toInt()
     return if (floor.toDouble() == num) floor else floor - java.lang.Double.doubleToRawLongBits(num).ushr(63).toInt()
 }
 
-fun collide(faceN: Vector3d, facePos: Vector3d, line: Vector3d, linePos: Vector3d): Vector3d {
-    val gt = line.x * faceN.x + line.y * faceN.y + line.z * faceN.z
-    val v = linePos.x * faceN.x + linePos.y * faceN.y + linePos.z * faceN.z - (facePos.x * faceN.x + facePos.y * faceN.y + facePos.z * faceN.z)
+fun collide(faceDirection: Vector3d, facePos: Vector3d, lineDirection: Vector3d, linePos: Vector3d): Vector3d {
+//    val gt = line.dot(faceN) //line.x * faceN.x + line.y * faceN.y + line.z * faceN.z
+//    val v = linePos.dot(faceN) - facePos.dot(faceN) //linePos.x * faceN.x + linePos.y * faceN.y + linePos.z * faceN.z - (facePos.x * faceN.x + facePos.y * faceN.y + facePos.z * faceN.z)
+//    val t = -v / gt
+    val t = - lineDirection.dot(faceDirection) / (linePos.dot(faceDirection) - facePos.dot(faceDirection))
 
-    val t = -v / gt
-
-    return Vector3d(t * line.x + linePos.x, t * line.y + linePos.y, t * line.z + linePos.z)
+    return lineDirection * t + linePos //return Vector3d(t * lineDirection.x + linePos.x, t * lineDirection.y + linePos.y, t * lineDirection.z + linePos.z)
 }
 
 fun collideInBlock(result: Vector3d, face: Face, pos: Vector3d): Boolean {
     val currentPos = pos.add(face.skip)
-    //println(currentPos)
     if (currentPos.x <= result.x && result.x <= currentPos.x + 1) {
-        //println("X")
         if (currentPos.y <= result.y && result.y <= currentPos.y + 1) {
-            //println("Y")
             if (currentPos.z <= result.z && result.z <= currentPos.z + 1) {
                 return true
             }
@@ -96,56 +91,14 @@ fun collides(pos: Vector3d, startPos: Vector3d, finishPos: Vector3d, xCheck: Int
             return Pair(FaceLocation(Face.ZPlus, pos, z2), FaceLocation(Face.Z, pos, z))
     }
 
-    /*
-    if (yCheck < 0) {
-        val y = collide(yVecN, originalVec, direction, startPos)
-        //println("y $y")
-        if (collideInBlock(y, Face.Y, pos))
-            return Pair(FaceLocation(Face.Y, pos, y),
-    }
-
-    if (xCheck < 0) {
-        val x = collide(xVecN, originalVec, direction, startPos)
-        //println("x $x")
-        if (collideInBlock(x, Face.X, pos))
-            return FaceLocation(Face.X, pos, x)
-    }
-
-    if (zCheck < 0) {
-        val z = collide(zVecN, originalVec, direction, startPos)
-        //println("z $z")
-        if (collideInBlock(z, Face.Z, pos))
-            return FaceLocation(Face.Z, pos, z)
-    }
-
-    if (yCheck > 0) {
-        val y2 = collide(yVec, plusVec, direction, startPos)
-        //println("y2 $y2")
-        if (collideInBlock(y2, Face.YPlus, pos))
-            return FaceLocation(Face.YPlus, pos, y2)
-    }
-
-    if (xCheck > 0) {
-        val x2 = collide(xVec, plusVec, direction, startPos)
-        //println("x2 $x2")
-        //println("N: $x2")
-        if (collideInBlock(x2, Face.XPlus, pos))
-            return FaceLocation(Face.XPlus, pos, x2)
-    }
-
-    if (zCheck > 0) {
-        val z2 = collide(zVec, plusVec, direction, startPos)
-        println("z2 $z2")
-        if (collideInBlock(z2, Face.ZPlus, pos))
-            return FaceLocation(Face.ZPlus, pos, z2)
-    }
-    */
-    //println("end")
-
     return null
 }
 
-class Vector3d(x: Double, y: Double, z: Double, private val editable: Boolean = false) : Cloneable {
+class Vector3d(x: Double, y: Double, z: Double, private val editable: Boolean) : Cloneable {
+
+    constructor(x: Double, y: Double, z: Double) : this(x, y, z, false)
+    constructor(x: Int, y: Int, z: Int) : this(x, y, z, false)
+
 
     var x: Double = x
         set(value) {
@@ -180,9 +133,10 @@ class Vector3d(x: Double, y: Double, z: Double, private val editable: Boolean = 
     val blockZ: Int
         get() = floor(z)
 
-    constructor(x: Int, y: Int, z: Int, editable: Boolean = false) : this(x.toDouble(), y.toDouble(), z.toDouble(), editable)
-    constructor(vec: Vector3d, editable: Boolean = vec.editable) : this(vec.x, vec.y, vec.z, editable)
-    
+    constructor(x: Int, y: Int, z: Int, editable: Boolean) : this(x.toDouble(), y.toDouble(), z.toDouble(), editable)
+    constructor(vec: Vector3d, editable: Boolean) : this(vec.x, vec.y, vec.z, editable)
+    constructor(vec: Vector3d) : this(vec, vec.editable)
+
     fun getDistance(vec: Vector3d) = Math.sqrt((vec.x - x) * (vec.x - x) + (vec.y - y) * (vec.y - y) + (vec.z - z) * (vec.z - z))
 
     fun min(vec: Vector3d) = Vector3d(Math.min(x, vec.x), Math.min(y, vec.y), Math.min(z, vec.z))
@@ -386,17 +340,17 @@ class Vector3d(x: Double, y: Double, z: Double, private val editable: Boolean = 
         }
     }
 
-    fun get2DPoint(eye: Double, mul: Double): Point? {
+    fun get2DPoint(eye: Double, mul: Double): Point {
         val x = x / (z + eye) * eye * mul
         val y = y / (z + eye) * eye * mul
         return Point(x, y)
     }
 
-    fun out3D(p3d: Point3D): Point3D? {
-        return Point3D(y * p3d.z - z * p3d.y, z * p3d.y - x * p3d.z, x * p3d.y - y * p3d.x)
+    fun out3D(p3d: Vector3d): Vector3d {
+        return Vector3d(y * p3d.z - z * p3d.y, z * p3d.y - x * p3d.z, x * p3d.y - y * p3d.x)
     }
 
-    fun getRotatePoint(yaw: Double, pitch: Double): Point3D? {
+    fun getRotatePoint(yaw: Double, pitch: Double): Vector3d {
         // x1 = b * cos(pitch) - a * sin(pitch)
         // y1 = b * sin(pitch) + a * cos(pitch)
         val a = x
@@ -409,12 +363,12 @@ class Vector3d(x: Double, y: Double, z: Double, private val editable: Boolean = 
         val y1 = b * sin(d) + a * cos(d)
         val y2 = c * cos(d2) - y1 * sin(d2)
         val z2 = c * sin(d2) + y1 * cos(d2)
-        return Point3D(x1, y2, z2)
+        return Vector3d(x1, y2, z2)
     }
 
-    fun getDirection(yaw: Double, pitch: Double, multiply: Double): Point3D? {
+    fun getDirection(yaw: Double, pitch: Double, multiply: Double): Vector3d {
         val xz = cos(Math.toRadians(pitch))
-        return Point3D(-xz * sin(Math.toRadians(yaw)) * multiply,
+        return Vector3d(-xz * sin(Math.toRadians(yaw)) * multiply,
             sin(Math.toRadians(pitch)) * multiply,
             xz * cos(Math.toRadians(yaw)) * multiply
         )

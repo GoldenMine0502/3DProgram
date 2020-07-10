@@ -1,6 +1,7 @@
 package kr.goldenmine.models
 
 import kr.theterroronline.util.physics.Vector3d
+import java.awt.Color
 
 class SkyRectangle(
     override val currentPos: Vector3d,
@@ -11,8 +12,9 @@ class SkyRectangle(
     z: Double,
     xs: Double,
     ys: Double,
-    zs: Double
-) : Rectangle(x, y, z, xs, ys, zs), PhysicalObject {
+    zs: Double,
+    color: Color = Color.BLACK
+) : Rectangle(x, y, z, xs, ys, zs, color), PhysicalObject {
     override val lastPos: Vector3d = Vector3d(currentPos)
     override val acceleration: Vector3d = Vector3d(0, 0, 0, true)
 
