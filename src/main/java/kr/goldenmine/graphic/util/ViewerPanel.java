@@ -1,4 +1,4 @@
-package kr.goldenmine;
+package kr.goldenmine.graphic.util;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -61,7 +61,7 @@ public class ViewerPanel extends JPanel {
         return checkBox.isSelected();
     }
 
-    interface Lambda {
+    public interface Lambda {
         void accept();
     }
 }

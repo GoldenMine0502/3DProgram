@@ -1,6 +1,6 @@
 package kr.theterroronline.util.physics
 
-import kr.goldenmine.util.Face
+import kr.goldenmine.graphic.util.Face
 import kr.goldenmine.models.Dot
 import kr.goldenmine.models.SkyRectangle
 import kr.goldenmine.points.Point
@@ -499,7 +499,7 @@ class Vector3d(x: Double, y: Double, z: Double, val editable: Boolean) : Cloneab
         return Point(x, y)
     }
 
-    fun out3D(p3d: Vector3d): Vector3d {
+    fun out(p3d: Vector3d): Vector3d {
         return Vector3d(y * p3d.z - z * p3d.y, z * p3d.y - x * p3d.z, x * p3d.y - y * p3d.x)
     }
 
@@ -581,6 +581,7 @@ operator fun Number.div(other: Vector3d): Vector3d {
 
 fun getDirection(yaw: Double, pitch: Double, editable: Boolean, multiply: Double = 1.0): Vector3d {
     val xz = cos(Math.toRadians(pitch))
+
     return Vector3d(
         -xz * sin(Math.toRadians(yaw)) * multiply,
         sin(Math.toRadians(pitch)) * multiply,

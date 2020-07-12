@@ -1,4 +1,4 @@
-package kr.goldenmine;
+package kr.goldenmine.graphic.util;
 
 import java.awt.*;
 import javax.swing.*;

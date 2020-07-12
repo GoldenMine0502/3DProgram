@@ -1,4 +1,4 @@
-package kr.goldenmine;
+package kr.goldenmine.graphic;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -10,9 +10,15 @@ import javafx.util.Pair;
 
 import javax.swing.*;
 
-import kr.goldenmine.util.Face;
+import kr.goldenmine.CollideResult;
+import kr.goldenmine.PointStorage;
+import kr.goldenmine.graphic.util.ViewerPanel;
+import kr.goldenmine.graphic.dialogs.LineFigureAddDialog;
+import kr.goldenmine.graphic.dialogs.RectangleFigureAddDialog;
+import kr.goldenmine.graphic.util.Face;
 import kr.goldenmine.models.*;
 import kr.goldenmine.points.Point;
+import kr.goldenmine.graphic.util.GoldenList;
 import kr.theterroronline.util.physics.Vector3d;
 
 import static kr.theterroronline.util.physics.Vector3dKt.*;
@@ -203,8 +209,8 @@ public class DisplayGUI extends JFrame {
         Vector3d rec2StartPos = rec2.getCurrentPos();
         Vector3d rec2FinishPos = rec2StartPos.add(rec2.getSize());
 
-        return rec1.getCoordinates().stream().anyMatch(it -> it.between(rec2StartPos, rec2FinishPos, -EPSILON)) ||
-                rec2.getCoordinates().stream().anyMatch(it -> it.between(rec1StartPos, rec1FinishPos, -EPSILON));
+        return rec1.getCoordinates().stream().anyMatch(it -> it.between(rec2StartPos, rec2FinishPos, EPSILON)) ||
+                rec2.getCoordinates().stream().anyMatch(it -> it.between(rec1StartPos, rec1FinishPos, EPSILON));
     }
 
     public void startPhysicalCalculationThread() {
@@ -258,6 +264,7 @@ public class DisplayGUI extends JFrame {
                                                 case ZPlus:
 //                                                dot.getAcceleration().setZ(-dot.getAcceleration().getZ());
                                                     dot.getVelocity().setZ(-dot.getVelocity().getZ());
+                                                    // 공이 지면 위에 잘 서 있도록 하기 위함
                                                     if(0 <= dot.getVelocity().getZ() && dot.getVelocity().getZ() < 0.005) {
                                                         dot.getVelocity().setZ(0.005);
                                                     }
@@ -367,7 +374,7 @@ public class DisplayGUI extends JFrame {
                 Vector3d p3d = points.get(0);
                 Vector3d p3d2 = points.get(1);
 
-                vectorAddDialog.setValues(Collections.singletonList(p3d.out3D(p3d2)), Color.GREEN);
+                vectorAddDialog.setValues(Collections.singletonList(p3d.out(p3d2)), Color.GREEN);
                 vectorAddDialog.setVisible(true);
 
                 initializePoints();
@@ -399,6 +406,7 @@ public class DisplayGUI extends JFrame {
         addMenus();
         startPhysicalCalculationThread();
         addRectangle(new Vector3d(-2, -2, -2), new Vector3d(4, 4, 4), Color.GREEN);
+        addRectangle(new Vector3d(-1, -1, 4), new Vector3d(2, 2, 2), Color.BLACK);
     }
 
     public void updateVectorViewerPanels() {
@@ -434,7 +442,6 @@ public class DisplayGUI extends JFrame {
                     panel = (ViewerPanel) vectorViewerPanelList.getElement(index);
                 }
 
-                //
                 panel.setTitle(loopIndex, "(" + point.getX() + ", " + point.getY() + ", " + point.getZ() + ")");
                 panel.invalidate();
 
@@ -549,7 +556,7 @@ public class DisplayGUI extends JFrame {
                         }
                     }
 
-                    // TODO 원래 rectangle일 때 전용 수정 창을 보여줘야 하는데 귀찮아서 생략
+                    // TODO 원래 rectangle일 때 전용 수정 창을 보여줘야 하는데
                     if (figure instanceof kr.goldenmine.models.Rectangle) {
                         kr.goldenmine.models.Rectangle rec = (kr.goldenmine.models.Rectangle) figure;
                         Vector3d start = new Vector3d(rec.getX(), rec.getY(), rec.getZ());

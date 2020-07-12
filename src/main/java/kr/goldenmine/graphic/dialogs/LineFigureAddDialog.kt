@@ -1,4 +1,4 @@
-package kr.goldenmine
+package kr.goldenmine.graphic.dialogs
 
 import kr.theterroronline.util.physics.Vector3d
 import java.awt.Color

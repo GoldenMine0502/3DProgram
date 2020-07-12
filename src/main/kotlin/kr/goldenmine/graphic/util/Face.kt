@@ -1,4 +1,4 @@
-package kr.goldenmine.util
+package kr.goldenmine.graphic.util
 
 import kr.theterroronline.util.physics.Vector3d
 
