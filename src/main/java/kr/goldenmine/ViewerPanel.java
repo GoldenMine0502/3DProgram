@@ -9,7 +9,7 @@ public class ViewerPanel extends JPanel {
     private JButton editButton = new JButton("Edit");
     private JCheckBox checkBox = new JCheckBox("");
 
-    private int index = 0;
+    private int loopIndex = 0;
 
     private Lambda editButtonEvent;
     private Lambda checkBoxEvent;
@@ -44,13 +44,13 @@ public class ViewerPanel extends JPanel {
     }
 
     public void setTitle(int index, String text) {
-        this.index = index;
+        this.loopIndex = index;
         title.setText(text);
         //        vector.setText("(" + point.getX() + ", " + point.getY() + ", " + point.getZ() + ")");
     }
 
-    public int getIndex() {
-        return index;
+    public int getLoopIndex() {
+        return loopIndex;
     }
 
     public void clearCheckBox() {

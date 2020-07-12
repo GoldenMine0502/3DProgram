@@ -8,5 +8,5 @@ interface PhysicalObject {
     val velocity: Vector3d
     val acceleration: Vector3d
 
-    fun next()
+    fun calculateNextPosition()
 }

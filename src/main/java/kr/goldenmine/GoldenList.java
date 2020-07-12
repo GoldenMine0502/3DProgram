@@ -40,7 +40,7 @@ public class GoldenList extends JPanel {
             panel.add(component, constraints);
         }
 
-        // 가운데서부터 컴포넌트들이 나오도록
+        // 위에서부터 컴포넌트들이 나오도록
         {
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.anchor = GridBagConstraints.NORTHWEST;

@@ -1,4 +1,4 @@
-package kr.goldenmine.collision
+package kr.goldenmine.util
 
 import kr.theterroronline.util.physics.Vector3d
 
