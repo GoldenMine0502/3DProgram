@@ -119,34 +119,25 @@ fun collide(faceDirection: Vector3d, facePos: Vector3d, lineDirection: Vector3d,
 //}
 
 fun getWeight(rectangle: SkyRectangle): Double {
-    return Math.cbrt(rectangle.size.x * rectangle.size.y * rectangle.size.z)
+    return rectangle.size.x * rectangle.size.y * rectangle.size.z
 }
 
+const val ADAPT_WEIGHT = 0.1
+
 fun applyNewVelocity(dot: Dot, rectangle: SkyRectangle) {
-    val ballWeight = 1.0
+    val ballWeight = dot.radius * dot.radius * dot.radius * Math.PI * 4 / 3 * ADAPT_WEIGHT
     val rectangleWeight = getWeight(rectangle)
-    val e = 0.9
+    val e = 0.7
 
     /*
      공의 무게는 1로 가정.
      직육면체의 무게는 cbrt(가로 * 세로 * 높이)로 가정.
-     충돌 계수는 0.9로 가정.
+     충돌 계수는 0.7로 가정.
      */
 //    val practice: Vector3d = dot.velocity.multiply(ballWeight).add(rectangle.velocity.multiply(rectangleWeight))
     // 충돌 전 초기 운동량
     val practice = dot.velocity * ballWeight + rectangle.velocity * rectangleWeight
-    /*
-        e = (v1' - v2') / (v2 - v1)
-        m1 * v1 + m2 * v2 = m1 * v1' + m2 * v2'
-        충돌계수가 0.9이므로
-        e = (v1' - v2') / (v2 - v1)
-        e * (v2 - v1) + v1' = v2'
-        m1 * v1 + m2 * v2 = m1 * v1' + m2 * (e * (v2 - v1) + v1') = k
-        k = m1 * v1' + m2 * 0.9 * (v2 - v1) + m2 * v1'
-        (k - m2 * e * (v2 - v1)) / (m1 + m2) = v1' = 충돌 후 공의 속도
-        v1' = ((m1 * v1 + m2 * v2 - m2 * e * (v2 - v1)) / (m1 + m2)
-        (k - m1 * v1') / m2 = v2'
-    */
+
 //    val ballVelocityAfterCollide: Vector3d =
 //        practice.subtract(rectangle.velocity.subtract(dot.velocity).multiply(rectangleWeight * e))
 //            .divide(ballWeight + rectangleWeight)
@@ -162,17 +153,17 @@ fun applyNewVelocity(dot: Dot, rectangle: SkyRectangle) {
 }
 
 fun applyNewVelocity(rectangle: SkyRectangle, rectangle2: SkyRectangle) {
-    val rectangleWeight = getWeight(rectangle)
-    val rectangle2Weight = getWeight(rectangle2)
-    val e = 0.9
+    val rectangleWeight = getWeight(rectangle) * ADAPT_WEIGHT
+    val rectangle2Weight = getWeight(rectangle2) * ADAPT_WEIGHT
+    val e = 0.4
     /*
      공의 무게는 1로 가정.
      직육면체의 무게는 cbrt(가로 * 세로 * 높이)로 가정.
-     충돌 계수는 0.9로 가정.
+     충돌 계수는 0.4로 가정.
      */
 //    val practice: Vector3d = dot.velocity.multiply(ballWeight).add(rectangle.velocity.multiply(rectangleWeight))
     // 충돌 전 초기 운동량
-    val practice = rectangle.velocity * rectangleWeight + rectangle2.velocity * rectangle2Weight
+//    val practice = rectangle.velocity * rectangleWeight + rectangle2.velocity * rectangle2Weight
     /*
         e = (v1' - v2') / (v2 - v1)
         m1 * v1 + m2 * v2 = m1 * v1' + m2 * v2'
@@ -189,15 +180,24 @@ fun applyNewVelocity(rectangle: SkyRectangle, rectangle2: SkyRectangle) {
 //        practice.subtract(rectangle.velocity.subtract(dot.velocity).multiply(rectangleWeight * e))
 //            .divide(ballWeight + rectangleWeight)
     // 충돌 후 공의 속도
-    val ballVelocityAfterCollide = (practice - (rectangle2.velocity - rectangle.velocity) * rectangle2Weight * e) / (rectangleWeight + rectangle2Weight)
+//    val rectangleVelocityAfterCollide = (practice - (rectangle2.velocity - rectangle.velocity) * rectangle2Weight * e) / (rectangleWeight + rectangle2Weight)
 //    val rectangleVelocityAfterCollide =
 //        practice.subtract(ballVelocityAfterCollide.multiply(ballWeight)).divide(rectangleWeight)
     // 충돌 후 직육면체의 속도
-    val rectangleVelocityAfterCollide = (practice - ballVelocityAfterCollide * rectangleWeight) / rectangle2Weight
+//    val rectangle2VelocityAfterCollide = (practice - rectangleVelocityAfterCollide * rectangleWeight) / rectangle2Weight
 
+//    val rectangleVelocityAfterCollide = rectangle.velocity - rectangle2Weight * (1 + e) / (rectangleWeight + rectangle2Weight) * (rectangle.velocity - rectangle2.velocity)
+//    val rectangle2VelocityAfterCollide = rectangle.velocity + rectangleWeight * (1 + e) / (rectangleWeight + rectangle2Weight) * (rectangle.velocity - rectangle2.velocity)
+
+    val lastRectangleVelocity = rectangle.velocity.clone()
+    val lastRectangle2Velocity = rectangle2.velocity.clone()
+
+
+    rectangle.velocity -= rectangle2Weight * (1 + e) / (rectangleWeight + rectangle2Weight) * (lastRectangleVelocity - lastRectangle2Velocity)
+    rectangle2.velocity += rectangleWeight * (1 + e) / (rectangleWeight + rectangle2Weight) * (lastRectangleVelocity - lastRectangle2Velocity)
     // 해당하는 속도로 설정
-    rectangle.velocity.copyFrom(ballVelocityAfterCollide)
-    rectangle2.velocity.copyFrom(rectangleVelocityAfterCollide)
+//    rectangle.velocity.copyFrom(rectangleVelocityAfterCollide)
+//    rectangle2.velocity.copyFrom(rectangle2VelocityAfterCollide)
 }
 // 공기저항 관련 코드
 /*
@@ -558,6 +558,16 @@ class Vector3d(x: Double, y: Double, z: Double, val editable: Boolean) : Cloneab
 
     operator fun unaryMinus(): Vector3d {
         return Vector3d(-x, -y, -z)
+    }
+
+    operator fun timesAssign(d: Double) {
+        if(editable) {
+            x *= d
+            y *= d
+            z *= d
+        } else {
+            throw UnsupportedOperationException("cannot modify original settings")
+        }
     }
 }
 

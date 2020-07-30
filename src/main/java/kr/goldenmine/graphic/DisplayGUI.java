@@ -112,6 +112,8 @@ public class DisplayGUI extends JFrame {
     private final DisplayGUI instance = this;
     private Thread updateThread;
 
+    private final HashMap<SkyRectangle, SkyRectangle> lastCollided = new HashMap<>();
+
     public DisplayGUI() {
         this(0, 25);
     }
@@ -166,7 +168,7 @@ public class DisplayGUI extends JFrame {
 //        if(linePos.between(startPosEPSILON, finishPosEPSILON)) {
 //            System.out.println("linePosCurrent: " + linePos);
 
-        // 고등학교 때 배운 평면과 직선 사이의 교점을 구하는 코드 (기하와 벡터 교과서에 나오는 개념, 문서 참조)
+        // 고등학교 때 배운 평면과 직선 사이의 교점을 구하는 코드
         final Vector3d intersectX = collide(faceXDirection, startPos, lineDirection, linePos); // 시작 점 기준
         // 이제 교점을 구했으니 구해진 교점이 SkyRectangle의 범위 안에서 형성되었는 지 체크하면 됨.
         if(lineDirection.getX() >= 0 && intersectX.between(startPos, finishPos, EPSILON) && intersectX.between(linePosLast, linePos, EPSILON)) return new CollideResult(intersectX, Face.Z);
@@ -280,14 +282,28 @@ public class DisplayGUI extends JFrame {
 //                                        applyDragForce(dot);
                                     }
                                     if(obj instanceof SkyRectangle) {
-                                        SkyRectangle skyRectangle = (SkyRectangle) obj;
+                                        SkyRectangle source = (SkyRectangle) obj;
                                         Optional<SkyRectangle> result = storage.getFigures().stream()
                                                 .filter(it->it.getKey() instanceof SkyRectangle)
                                                 .map(it->(SkyRectangle)it.getKey())
-                                                .filter(it->it != skyRectangle && checkCollision(skyRectangle, it))
+                                                .filter(it->it != source && checkCollision(source, it))
                                                 .findFirst();
                                         if(result.isPresent()) {
-                                            applyNewVelocity(skyRectangle, result.get());
+                                            SkyRectangle opponent = result.get();
+
+                                            SkyRectangle lastColliedOpponent = lastCollided.get(source);
+
+                                            if(lastColliedOpponent != opponent) {
+                                                applyNewVelocity(source, opponent);
+                                                lastCollided.put(source, opponent);
+                                                lastCollided.put(opponent, source);
+                                            }
+                                        } else {
+                                            SkyRectangle lastColliedOpponent = lastCollided.get(source);
+                                            if(lastColliedOpponent != null) {
+                                                lastCollided.remove(source);
+                                                lastCollided.remove(lastColliedOpponent);
+                                            }
                                         }
                                     }
 
@@ -300,6 +316,7 @@ public class DisplayGUI extends JFrame {
                             }
                             // 화면 갱신
                             repaint();
+                            //System.out.println(lastCollided.size());
                         } catch(ConcurrentModificationException ex) {
                             System.out.println("CME occured but keeps running");
                         } catch(Exception ex) {
